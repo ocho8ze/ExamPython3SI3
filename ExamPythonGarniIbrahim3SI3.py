@@ -13,7 +13,7 @@ import enchant
 
 #initialisation du serveur et du port
 host = "148.113.42.34"
-port = 51453
+port = 17936
 
 
 #Fonction pour récuperer les questions et y répondre
@@ -80,7 +80,28 @@ def Question_11(resp):
     return best_guess if best_guess else None
 
 def Question_12(resp):
-    None
+    resp = resp[resp.index("message: ")+len("message: "):]
+    for decode_function in (base64.b64decode, base64.b32decode, base64.b16decode, base64.b85decode):
+        try:
+            decoded_resp = decode_function(resp).decode('utf-8')
+        except:
+            continue
+    print(resp)
+    print(decoded_resp)
+    for decalage in range(26):
+        resultat = ""
+        for caractere in decoded_resp:
+            if 'a' <= caractere <= 'z':
+                resultat += chr((ord(caractere) - ord('a') + decalage) % 26 + ord('a'))
+            elif 'A' <= caractere <= 'Z':
+                resultat += chr((ord(caractere) - ord('A') + decalage) % 26 + ord('A'))
+            else:
+                resultat += caractere
+        for decode_function in (base64.b64decode, base64.b32decode, base64.b16decode, base64.b85decode):
+            try:
+                return decode_function(resultat).decode('utf-8')
+            except:
+                continue
 
 # Dictionnaire de conversion Morse et Braille
 
