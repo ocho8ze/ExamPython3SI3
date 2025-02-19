@@ -3,8 +3,7 @@
 #3SI3
 
 #Importation des modules nécessaires
-import os
-import time
+import datetime
 import socket
 import base64
 import base58
@@ -13,7 +12,7 @@ import enchant
 
 #initialisation du serveur et du port
 host = "148.113.42.34"
-port = 17936
+port = 56565
 
 
 #Fonction pour récuperer les questions et y répondre
@@ -22,13 +21,13 @@ def Question_3(resp):
     return str(eval(resp[resp.index("Quel est le résultat de ") + len("Quel est le résultat de "): - 2 ]))
     
 def Question_4(resp):
+    en = enchant.Dict("en")
     resp = resp[resp.index("message: ")+ len("message: "):]
-    for decode_function in (base64.b64decode, base64.b32decode, base64.b16decode, base64.b85decode, base58.b58decode):
+    for decode_function in (base64.b64decode, base64.b32decode, base64.b16decode, base58.b58decode, base64.b85decode):
         try:
             return decode_function(resp).decode('utf-8')
         except:
             pass
-    return None
 
 def Question_5(resp):
     resp = bytes.fromhex(resp[resp.index("majuscule: ")+len("majuscule: "):]).decode('utf-8')
@@ -45,7 +44,7 @@ def Question_6(resp):
     return ''.join(resp_braille_decoded)
 
 def Question_7(resp):
-    return webcolors.rgb_to_name(rgb_triplet=list(map(int, resp[resp.index("RGB (")+len("RGB ("):resp.index(") ?")].split(','))), spec='css3')
+    return webcolors.rgb_to_name(rgb_triplet=list(map(int, resp[resp.index("RGB (")+len("RGB ("):resp.index(") ?")].split(','))))
 
 def Question_8(resp):
     return int(resp[resp.index("la question ")+len("la question "):])-1
@@ -63,8 +62,8 @@ def Question_10(reponse):
 
 def Question_11(resp):
     alphabet = 'abcdefghijklmnopqrstuvwxyz'
-    en = enchant.Dict("en_US")
-    best_guess = None
+    en = enchant.Dict("en")
+    best_guess = ""
     resp = resp[resp.index("message: ")+len("message: "):]
     for i in range(26):
         mot_decod = ""
@@ -73,15 +72,18 @@ def Question_11(resp):
             if indice >= 26 : indice -= 26
             else : pass
             mot_decod += alphabet[indice]
-        if en.check(mot_decod) is True: return mot_decod
+        if en.check(mot_decod) is True:
+            return mot_decod
         suggestions = en.suggest(mot_decod)
-        if suggestions: best_guess = suggestions[0]
+        if suggestions: 
+            for i in range(len(suggestions)):
+                if sum(char1 != char2 for char1, char2 in zip(best_guess, suggestions)) <= 2: best_guess = suggestions[i] 
         else : pass
     return best_guess if best_guess else None
 
 def Question_12(resp):
     resp = resp[resp.index("message: ")+len("message: "):]
-    for decode_function in (base64.b64decode, base64.b32decode, base64.b16decode, base64.b85decode, base58.b58decode):
+    for decode_function in (base64.b64decode, base64.b32decode, base64.b16decode, base58.b58decode, base64.b85decode):
         try:
             decoded_resp = decode_function(resp).decode('utf-8')
         except:
@@ -121,14 +123,16 @@ braille_dict = {
 #Fonction principale pour lancer le test
 def ExamPython():
     try:
-        reponse =  ["ibrahim/garni/3SI3", "16/02"]
+        reponse =  ["ibrahim/garni/3SI3"]
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, port))
         for i in range(12):
             resp=s.recv(1024)
             resp = resp.decode()
             print(resp)
-            if i == 2:
+            if i == 1:
+                reponse.append(datetime.datetime.today().strftime('%d/%m'))
+            elif i == 2:
                 reponse.append(Question_3(resp))
             elif i == 3 :
                 reponse.append(Question_4(resp))
@@ -154,12 +158,7 @@ def ExamPython():
         return True
     except Exception as e :
         print(f"Echec : {e}")
-        os.system("clear")
         s.close()
 
 #Fonction principale qui lance le test tant que l'examen n'est pas réussi
-def main():
-    while not ExamPython():
-        time.sleep(2)
-
-main()
+ExamPython()
